@@ -1,23 +1,112 @@
 #include "mbed.h"
-// #include "OvenConfig.h"
+#include "OvenConfig.h"
+#include "PIDController.h"
 
-DigitalOut relayControl(D9);
+PwmOut relayControl(D9);
 
 AnalogIn temperatureInput(A0);
+
+DigitalOut led(LED1);
 
 uint8_t getTemperature();
 
 
+typedef enum {
+    STARTUP,
+    PREHEAT,
+    PREHEAT_HOLD,
+    CURE,
+    CURE_HOLD,
+    DWELL,
+    DWELL_HOLD,
+    FINISH
+} OvenState;
+
+OvenState ovenState;
+
+PIDController* pidController;
+
+Timer* timer;
 
 int main()
 {
     printf("Main\n");
+    ovenState = STARTUP;
+    relayControl.period_ms(10000); // 10 second period
+    relayControl.write(0.0f);
+
+    led.write(0);
+
+    pidController = new PIDController(PID_KP, PID_KI, PID_KD);
+
+    timer = new Timer();
+
     // ReSharper disable once CppDFAEndlessLoop
     while(true) {
-        // relayControl.write(1);
-
         const uint16_t temperature = getTemperature();
-        printf("Temperature: %u\n", temperature);
+        // printf("Temperature: %u\n", temperature);
+
+        switch (ovenState) {
+            case STARTUP:
+                relayControl.write(0);
+                pidController->resetIntegral();
+                pidController->SetSP(PREHEAT_TEMP);
+                ovenState = PREHEAT;
+                break;
+            case PREHEAT:
+                relayControl.write(pidController->Compute(temperature));
+                if (pidController->atSetPoint(temperature, PID_DELTA)) {
+                    ovenState = PREHEAT_HOLD;
+                    timer->reset();
+                    timer->start();
+                }
+                break;
+            case PREHEAT_HOLD:
+                relayControl.write(pidController->Compute(temperature));
+                if (timer->elapsed_time() >= std::chrono::minutes(PREHEAT_TIME)) {
+                    pidController->resetIntegral();
+                    pidController->SetSP(CURE_TEMP);
+                    ovenState = CURE;
+                }
+                break;
+            case CURE:
+                relayControl.write(pidController->Compute(temperature));
+                if (pidController->atSetPoint(temperature, PID_DELTA)) {
+                    ovenState = CURE_HOLD;
+                    timer->reset();
+                    timer->start();
+                }
+                break;
+            case CURE_HOLD:
+                relayControl.write(pidController->Compute(temperature));
+                if (timer->elapsed_time() >= std::chrono::minutes(CURE_TIME)) {
+                    pidController->resetIntegral();
+                    pidController->SetSP(DWELL_TEMP);
+                    ovenState = DWELL;
+                }
+                break;
+            case DWELL:
+                relayControl.write(pidController->Compute(temperature));
+                if (pidController->atSetPoint(temperature, PID_DELTA)) {
+                    ovenState = DWELL_HOLD;
+                    timer->reset();
+                    timer->start();
+                }
+                break;
+            case DWELL_HOLD:
+                relayControl.write(pidController->Compute(temperature));
+                if (timer->elapsed_time() >= std::chrono::minutes(DWELL_TIME)) {
+                    ovenState = FINISH;
+                }
+                break;
+            case FINISH:
+                relayControl.write(0);
+                led.write(1);
+                break;
+            default:
+                relayControl.write(0);
+                break;
+        }
 
         ThisThread::sleep_for(1000ms);
     }

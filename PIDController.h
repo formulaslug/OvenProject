@@ -15,7 +15,11 @@ public:
 
     void SetSP(const float setPoint);
 
-    float Compute(float input); // should be run regularly
+    float Compute(float input); // should be run at a regular interval
+
+    void resetIntegral();
+
+    bool atSetPoint(float input, float delta);
 private:
     const float kP;
     const float kI;
