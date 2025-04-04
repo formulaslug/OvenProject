@@ -21,7 +21,7 @@ float PIDController::Compute(const float input) {
     const float d = (error - this->lastError) * this->kD;
     this->lastError = error;
 
-    return std::max(0.0f, std::min(p + d + i, 1.0f));
+    return std::max(0.0f, std::min(p + d + i, 0.8f));
 }
 
 void PIDController::resetIntegral() {

@@ -44,7 +44,9 @@ int main()
     // ReSharper disable once CppDFAEndlessLoop
     while(true) {
         const uint16_t temperature = getTemperature();
-        // printf("Temperature: %u\n", temperature);
+        printf("Temperature: %u\n", temperature);
+
+        printf("State: %u\n", ovenState);
 
         switch (ovenState) {
             case STARTUP:
@@ -107,6 +109,8 @@ int main()
                 relayControl.write(0);
                 break;
         }
+
+        printf("Output: %f\n", relayControl.read());
 
         ThisThread::sleep_for(1000ms);
     }

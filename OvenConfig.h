@@ -6,7 +6,7 @@
 #define OVENCONFIG_H
 
 #ifndef PID_KP
-#define PID_KP 500.0
+#define PID_KP 0.08
 #endif
 
 #ifndef PID_KI
@@ -23,31 +23,31 @@
 #endif
 
 
-// 121 degrees c is 250 degrees f
+// 80 degrees c is 250 degrees f
 #ifndef PREHEAT_TEMP
-#define PREHEAT_TEMP 121
+#define PREHEAT_TEMP 100
 #endif
 
 // time is in minutes
 #ifndef PREHEAT_TIME
-#define PREHEAT_TIME (10)
+#define PREHEAT_TIME (1)
 #endif
 
 
-// 121 degrees c is 250 degrees f
+// 130 degrees c is 250 degrees f
 #ifndef CURE_TEMP
-#define CURE_TEMP 121
+#define CURE_TEMP 130
 #endif
 
 // time is in minutes
 #ifndef CURE_TIME
-#define CURE_TIME (40)
+#define CURE_TIME (250)
 #endif
 
 
-// 121 degrees c is 250 degrees f
+// 100 degrees c is 250 degrees f
 #ifndef DWELL_TEMP
-#define DWELL_TEMP 121
+#define DWELL_TEMP 100
 #endif
 
 // time is in minutes
